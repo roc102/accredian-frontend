@@ -7,7 +7,7 @@ import github from "./github.png";
 
 import docker from "./tech/docker.png";
 import figma from "./tech/figma.png";
-import logo from './logo.jpg'
+import logo from './logo.png'
 
 import carrent from "./carrent.png";
 import tripguide from "./tripguide.png";
