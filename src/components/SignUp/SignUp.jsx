@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import logo  from '../../assets/logo.jpg';
+import logo  from '../../assets/logo.png';
 import { Link } from "react-router-dom";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -122,7 +122,7 @@ const SignUp = () => {
         }, 2000);
       } else {
         // Display error message from the server
-        toast.error(data.message || 'Unable to register user. Please try again.');
+        toast.error(data || 'Unable to register user. Please try again.');
       }
     } catch (error) {
       console.error('Error sending user data to backend:', error);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import logo  from '../../assets/logo.jpg';
+import logo  from '../../assets/logo.png';
 import { Link } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -28,7 +28,7 @@ const generateStrongPassword = () => {
 
 const Signin = () => {
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
   });
 
@@ -62,17 +62,17 @@ const Signin = () => {
 
   const sendUserDataToBackend = async () => {
     const userData = {
-      username: formData.username,
+      email: formData.email,
       password: formData.password,
     };
 
     // Validate email and username
-    if (!userData.username.trim() && !userData.password.trim()) {
+    if (!userData.email.trim() && !userData.password.trim()) {
       toast.error('Please enter your email/username and password');
       return;
     }
 
-    if (!userData.username.trim()) {
+    if (!userData.email.trim()) {
       toast.error('Please enter your email or username');
       return;
     }
@@ -109,6 +109,7 @@ const Signin = () => {
         body: JSON.stringify(userData),
       });
 
+      
       const data = await response.json();
 
       if (response.ok) {
@@ -145,9 +146,9 @@ const Signin = () => {
               </div>
               <InputBox
                   type="text"
-                  name="username"
+                  name="email"
                   placeholder="Email, Username, or Phone No"
-                  value={formData.username}
+                  value={formData.email}
                   onChange={handleChange}
               />
               <InputBox
