@@ -233,7 +233,7 @@ const Signin = () => {
               </a>
               <p className="text-base text-body-color dark:text-white">
                 <span className="pr-0.5">Not a member yet? </span>
-                <Link to="/signup" className="text-primary hover:underline">
+                <Link to="/" className="text-primary hover:underline">
                     Sign Up
                 </Link>
               </p>
