@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import logo  from '../../assets/logo.png';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import logo from '../assets/logo.png'
+import { Link } from "react-router-dom";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import zxcvbn from 'zxcvbn';
+// import zxcvbn from 'zxcvbn';
 
 const generateStrongPassword = () => {
   const uppercaseLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -26,82 +26,88 @@ const generateStrongPassword = () => {
   return password;
 };
 
-const Signin = () => {
+const SignUp = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
-  const [passwordTracker, setPasswordTracker] = useState({
-    uppercase: false,
-    lowercase: false,
-    specialChar: false,
-    digit: false,
-    score: 0,
-  });
-
-  const handleChange = (name, value) => {
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-
-    // Update password tracker
-    if (name === 'password') {
-      const passwordStrength = zxcvbn(value);
-
-      setPasswordTracker({
-        uppercase: value.match(/[A-Z]/) !== null,
-        lowercase: value.match(/[a-z]/) !== null,
-        specialChar: value.match(/[!@#$%^&*(),.?":{}|<>]/) !== null,
-        digit: value.match(/[0-9]/) !== null,
-        score: passwordStrength.score,
-      });
-    }
-  };
-
-  const sendUserDataToBackend = async () => {
-    const userData = {
-      email: formData.email,
-      password: formData.password,
+    const validatePassword = (password) => {
+      const hasUppercase = /[A-Z]/.test(password);
+      const hasLowercase = /[a-z]/.test(password);
+      const hasDigit = /[0-9]/.test(password);
+      const hasSpecialChar = /[!@#$%^&*()_+{}|<>?]/.test(password);
+      const isLengthValid = password.length >= 6;
+  
+      return {
+        hasUppercase,
+        hasLowercase,
+        hasDigit,
+        hasSpecialChar,
+        isLengthValid,
+      };
     };
 
-    // Validate email and username
-    if (!userData.email.trim() && !userData.password.trim()) {
-      toast.error('Please enter your email/username and password');
+  const sendUserDataToBackend = async () => {
+    // Basic validation
+    if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword ) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
-    if (!userData.email.trim()) {
-      toast.error('Please enter your email or username');
+    // Email validation using regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+   
+    // Password strength check using zxcvbn
+    if (!formData.password.trim()) {
+      toast.error("Please enter your password");
       return;
     }
 
-    // Validate password
-    if (!userData.password.trim()) {
-      toast.error('Please enter your password');
-      return;
-    }
+    const passwordValidation = validatePassword(formData.password);
 
-    const { uppercase, lowercase, specialChar, digit } = passwordTracker;
-    const isPasswordValid = uppercase && lowercase && specialChar && digit && formData.password.length >= 6;
-  
-    if (!isPasswordValid) {
+    if (
+      !passwordValidation.hasUppercase ||
+      !passwordValidation.hasLowercase ||
+      !passwordValidation.hasDigit ||
+      !passwordValidation.hasSpecialChar ||
+      !passwordValidation.isLengthValid
+    ) {
       const examplePassword = generateStrongPassword();
-      const passwordCriteria = '1 uppercase letter, 1 lowercase letter, 1 special character, 1 digit, and a minimum of 6 characters';
-  
+      const passwordCriteria =
+        "1 uppercase letter, 1 lowercase letter, 1 special character, 1 digit, and a minimum of 6 characters";
+
       toast.error(`
         Password does not meet the required strength. 
         Please ensure your password includes ${passwordCriteria} and try again.
         Example of a strong password: ${examplePassword}
       `);
-  
+
       return;
     }
 
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Password and Confirm Password do not match');
+      return;
+    }
+
+    const userData = {
+      email: formData.email,
+      password: formData.password,
+      username: formData.username,
+    };
+    
+    console.log('User Data:', userData);
+    
+
     try {
-      // Make API request only if password meets criteria
-      const response = await fetch('http://localhost:3001/signin', {
+      const response = await fetch('http://localhost:3001/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,24 +115,35 @@ const Signin = () => {
         body: JSON.stringify(userData),
       });
 
-      
       const data = await response.json();
+      console.log(data);
 
-      if (response.ok) {
+      if (response.ok && data.status !== 'fail') {
+        // User registered successfully
+
         localStorage.setItem('data', JSON.stringify(data));
-        toast.success('User signed in successfully! Redirecting to student profile...');
+        toast.success('User registered successfully! Redirecting to student profile...');
         
         // Redirect after 2 seconds
         setTimeout(() => {
           window.location.href = '/student-profile';
-        }, 2000); 
+        }, 2000);
       } else {
-        // Incorrect username or password
-        toast.error('Incorrect username or password');
+        // Display error message from the server
+        toast.error(data || 'Unable to register user. Please try again.');
       }
     } catch (error) {
       console.error('Error sending user data to backend:', error);
+      // Show error message
+      toast.error('Error registering user. Please try again.');
     }
+  };
+
+  const handleChange = (name, value) => {
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
   return (
@@ -134,37 +151,53 @@ const Signin = () => {
       <div className="container mx-auto">
         <div className="-mx-4 flex flex-wrap">
           <div className="w-full px-4">
-            <div className="relative mx-auto max-w-[525px] overflow-hidden rounded-lg bg-black px-10 py-16 text-center dark:bg-dark-2 sm:px-12 md:px-[60px]">
+            <div className="relative mx-auto max-w-[620px] overflow-hidden rounded-lg bg-black px-10 py-16 text-center dark:bg-dark-2 sm:px-12 md:px-[60px]">
               <div className="mb-10 text-center md:mb-16">
-                
-                  <img
-                    src={logo}
-                    alt="logo"
-                    className="mx-auto inline-block max-w-[120px]"
-                  />
-                
-              </div>
-              <InputBox
-                  type="text"
-                  name="email"
-                  placeholder="Email, Username, or Phone No"
-                  value={formData.email}
-                  onChange={handleChange}
+              <img
+                  src={logo}
+                  alt="logo"
+                  className="mx-auto inline-block max-w-[120px]"
               />
-              <InputBox
+              </div>
+                    <InputBox 
+                      type="text"
+                      name="username"
+                      placeholder="Username"
+                      value={formData.username}
+                      onChange={handleChange}
+                    /> 
+                  <InputBox 
+                      type="email"
+                      name="email"
+                      placeholder="Email" 
+                      value={formData.email}
+                      onChange={handleChange}
+                  />
+                 
+                  <InputBox
                   type="password"
                   name="password"
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleChange}
-              />
+                />
+
+                <InputBox 
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                />
+               
+                {/* Add your date_of_birth input field here */}
                 <div className="mb-10">
-                <button
+                  <button
                     type="button"
                     onClick={sendUserDataToBackend}
                     className="w-full cursor-pointer rounded-md bg-[#1C9CEA] hover:bg-blue-500 px-5 py-3 text-base font-medium text-white transition hover:bg-opacity-90"
                   >
-                    Sign In
+                    Sign Up
                   </button>
                 </div>
               <p className="mb-6 text-base text-secondary-color dark:text-dark-7">
@@ -236,9 +269,9 @@ const Signin = () => {
                 Forgot Password?
               </a>
               <p className="text-base text-body-color dark:text-white">
-                <span className="pr-0.5">Not a member yet? </span>
-                <Link to="/signup" className="text-primary hover:underline">
-                    Sign Up
+                <span className="pr-0.5">Already a member! </span>
+                <Link to="/signin" className="text-primary hover:underline">
+                    Sign In
                 </Link>
               </p>
 
@@ -469,7 +502,7 @@ const Signin = () => {
   );
 };
 
-export default Signin;
+export default SignUp;
 
 const InputBox = ({ type, name, placeholder, value, onChange }) => {
   return (

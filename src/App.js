@@ -1,6 +1,6 @@
 import React from 'react';
-import SignIn from './components/SignIn/SignIn'
-import SignUp from './components/SignUp/SignUp'
+import SignIn from './pages/SignIn';
+import SignUp from './pages/SignUp';
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -9,8 +9,8 @@ function App() {
     <Router>
       <div className='relative z-0'>
         <Routes>
-          <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/signin" element={<SignIn />} />
         </Routes>
       </div>
     </Router>
